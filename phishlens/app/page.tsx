@@ -1,70 +1,125 @@
-import React from 'react';
+'use client';
+
+import React, { useState } from 'react';
+
+// 1. Blueprints (TypeScript)
+interface ScanHistoryItem {
+  url: string;
+  status: string;
+  time: string;
+  isDanger: boolean;
+}
 
 export default function Home() {
+  // 2. Mental Switches (State)
+  const [urlInput, setUrlInput] = useState("");
+  const [isScanning, setIsScanning] = useState(false);
+  const [result, setResult] = useState("");
+  const [history, setHistory] = useState<ScanHistoryItem[]>([]);
+
+  // 3. The Brain (Logic)
+  const startScan = () => {
+    if (!urlInput) return; // Don't scan if empty
+
+    setIsScanning(true);
+    setResult("");
+
+    setTimeout(() => {
+      setIsScanning(false);
+      const score = Math.floor(Math.random() * 100) + 1;
+      
+      const isBad = score > 70;
+      let statusText = "";
+      if (score < 30) statusText = `SAFE (${score}/100)`;
+      else if (score < 70) statusText = `SUSPICIOUS (${score}/100)`;
+      else statusText = `DANGEROUS (${score}/100)`;
+
+      setResult(statusText);
+
+      // Add to history
+      const newEntry: ScanHistoryItem = {
+        url: urlInput,
+        status: statusText,
+        time: new Date().toLocaleTimeString(),
+        isDanger: isBad
+      };
+
+      setHistory(prev => [newEntry, ...prev]);
+      setUrlInput(""); // Clear the box
+    }, 2000);
+  };
+
   return (
     <main className="min-h-screen bg-slate-950 text-slate-100 p-8 font-sans">
-      {/* Header Section */}
-      <div className="max-w-6xl mx-auto flex justify-between items-center mb-12 border-b border-slate-800 pb-6">
-        <div>
-          <h1 className="text-4xl font-bold tracking-tighter bg-gradient-to-r from-blue-400 to-cyan-300 bg-clip-text text-transparent">
+      <div className="max-w-4xl mx-auto space-y-8">
+        
+        {/* Header */}
+        <div className="text-center">
+          <h1 className="text-5xl font-extrabold bg-gradient-to-r from-blue-400 to-cyan-300 bg-clip-text text-transparent">
             PHISHLENS
           </h1>
-          <p className="text-slate-400 text-sm italic">Cyber-Threat Intelligence v1.0</p>
+          <p className="text-slate-500 mt-2 italic">Professional Threat Intelligence</p>
         </div>
-        <div className="flex gap-4">
-          <div className="px-4 py-2 bg-slate-900 border border-blue-500/30 rounded-lg text-blue-400 text-xs flex items-center gap-2">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-            </span>
-            SYSTEM ACTIVE
-          </div>
-        </div>
-      </div>
 
-      {/* Main Scanner UI */}
-      <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
-        
-        {/* Left Column: Input Area */}
-        <div className="md:col-span-2 space-y-6">
-          <div className="bg-slate-900 border border-slate-800 p-8 rounded-2xl shadow-2xl">
-            <h2 className="text-xl font-semibold mb-4 text-blue-100">Analyze Suspicious Link</h2>
-            <div className="flex gap-4">
-              <input 
-                type="text" 
-                placeholder="Paste URL here (e.g., https://secure-login-bank.com)..." 
-                className="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 transition-all text-slate-300"
-              />
-              <button className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg shadow-blue-900/20">
-                SCAN
-              </button>
-            </div>
-            <p className="mt-4 text-xs text-slate-500 uppercase tracking-widest">Powered by PhishLens AI Engine</p>
-          </div>
-
-          {/* Results Placeholder */}
-          <div className="bg-slate-900/50 border border-dashed border-slate-800 p-12 rounded-2xl text-center">
-            <p className="text-slate-500 italic">Enter a URL above to begin forensic analysis.</p>
+        {/* Action Box */}
+        <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl">
+          <div className="flex gap-4">
+            <input 
+              type="text" 
+              placeholder="Enter URL to analyze..." 
+              value={urlInput}
+              onChange={(e) => setUrlInput(e.target.value)}
+              className="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 focus:border-blue-500 outline-none transition-colors text-slate-300"
+            />
+            <button 
+              onClick={startScan}
+              disabled={isScanning}
+              className={`${
+                isScanning ? 'bg-slate-700' : 'bg-blue-600 hover:bg-blue-500 active:scale-95'
+              } text-white px-10 py-3 rounded-xl font-bold transition-all flex items-center gap-3`}
+            >
+              {isScanning ? "SCANNING..." : "SCAN URL"}
+            </button>
           </div>
         </div>
 
-        {/* Right Column: Stats */}
-        <div className="space-y-6">
-          <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl">
-            <h3 className="text-slate-400 text-xs font-bold uppercase mb-4">Threat Database</h3>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-sm">Global Threats</span>
-                <span className="text-blue-400 font-mono">14,209</span>
-              </div>
-              <div className="flex justify-between items-center text-red-400">
-                <span className="text-sm font-semibold">Live Attacks</span>
-                <span className="text-sm font-mono animate-pulse">● 329</span>
-              </div>
-            </div>
+        {/* Result Area */}
+        {result && (
+          <div className={`p-6 rounded-xl border text-center animate-in zoom-in duration-300 ${
+            result.includes('SAFE') ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-400' :
+            result.includes('SUSPICIOUS') ? 'bg-yellow-500/10 border-yellow-500/50 text-yellow-400' :
+            'bg-rose-500/10 border-rose-500/50 text-rose-500'
+          }`}>
+            <span className="text-2xl font-mono font-bold">{result}</span>
+          </div>
+        )}
+
+        {/* History Table */}
+        <div className="mt-12 bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+          <div className="bg-slate-800/50 p-4 border-b border-slate-700">
+            <h3 className="font-bold text-slate-300">Scan History</h3>
+          </div>
+          <div className="p-4 space-y-3">
+            {history.length === 0 ? (
+              <p className="text-slate-600 text-center py-4">No data available.</p>
+            ) : (
+              history.map((item, index) => (
+                <div key={index} className="flex justify-between items-center bg-slate-950 p-4 rounded-xl border border-slate-800 animate-in slide-in-from-bottom">
+                  <div className="flex flex-col">
+                    <span className="text-blue-400 font-mono text-sm">{item.url}</span>
+                    <span className="text-slate-600 text-[10px] uppercase tracking-widest">{item.time}</span>
+                  </div>
+                  <span className={`text-xs font-bold px-3 py-1 rounded-full ${
+                    item.status.includes('SAFE') ? 'bg-emerald-900/30 text-emerald-400' : 
+                    item.status.includes('SUSPICIOUS') ? 'bg-yellow-900/30 text-yellow-400' : 'bg-rose-900/30 text-rose-400'
+                  }`}>
+                    {item.status}
+                  </span>
+                </div>
+              ))
+            )}
           </div>
         </div>
-
       </div>
     </main>
   );
